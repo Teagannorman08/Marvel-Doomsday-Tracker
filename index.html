@@ -1,0 +1,108 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DOOMSDAY — Marvel Watch Tracker</title>
+<style>
+:root{--bg:#070707;--text:#f5f5f5;--muted:#999;--red:#e62429;--line:#292929}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% -15%,#39090c,#080707 45%,#050505);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,Arial}
+header,main,footer{max-width:1250px;margin:auto}header{padding:28px 16px 20px}.brand{font-weight:1000;letter-spacing:.1em}.brand span{color:var(--red)}
+.count{margin-top:18px;padding:22px;border:1px solid #4a1719;border-radius:20px;background:linear-gradient(135deg,#190607,#0d0d0d);text-align:center}.k{color:#ff6b6f;font-size:12px;letter-spacing:.28em}.doom{font-size:24px;font-weight:1000;color:var(--red)}.target{font-size:11px;color:#aaa}
+.timer{display:grid;grid-template-columns:repeat(4,1fr);max-width:700px;margin:16px auto 0;gap:7px}.tb{background:#070707;border:1px solid var(--line);border-radius:10px;padding:8px}.tb b{font-size:clamp(10px,3vw,16px)}.tb i{font-size:9px;color:var(--muted)}
+nav{position:sticky;top:0;z-index:20;background:#080808ee;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.nav{max-width:1250px;margin:auto;padding:10px 16px;display:flex;gap:8px}
+button,select,input{font:inherit}.tab,.btn{border:1px solid var(--line);background:#151515;color:#ddd;border-radius:9px;padding:9px 12px;cursor:pointer;font-weight:800}.tab.active{background:var(--red);color:#fff;border-color:var(--red)}.btn:hover{opacity:.8}
+main{padding:16px}.toolbar{position:sticky;top:58px;z-index:15;background:#070707ee;backdrop-filter:blur(12px);padding:10px 0;border-bottom:1px solid #171717}.controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:center}input,select{border:1px solid var(--line);background:#0d0d0d;color:#fff;border-radius:6px;padding:8px}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0;color:#aaa}.stats b{color:#fff}.bar{height:9px;background:#1c1c1c;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:#e62429}
+.grid,.schedule{display:grid;gap:9px;margin-top:15px}.card{display:grid;grid-template-columns:74px 1fr auto;gap:13px;background:linear-gradient(100deg,#121212,#0d0d0d);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:.15s}.card:hover{border-color:var(--red)}
+.poster{width:74px;height:100px;background:#151515;border-radius:8px;aspect-ratio:2/3}
+.title{font-weight:800;color:#fff}.sub{font-size:12px;color:var(--muted);margin:4px 0}.desc{font-size:11px;color:#777;margin:8px 0}
+.episodes{grid-column:2/4;border-top:1px solid var(--line);padding-top:9px;display:none}.open .episodes{display:block}.season{margin:7px 0}.season h4{margin:0 0 5px;color:#aaa;font-size:11px;text-transform:uppercase}.ep{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px}
+.day{border-left:2px solid var(--red);padding-left:11px}.daydate{color:#ff777a;font-weight:900;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:5px 0}.sitem{display:grid;grid-template-columns:1fr auto;gap:12px;padding:8px 0}
+footer{padding:25px 16px;color:#666;font-size:12px}@media(max-width:700px){.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.card{grid-template-columns:58px 1fr}.poster{width:58px;height:82px}}
+</style><style id="cleaner-ui">
+.poster{display:none!important}
+.card{grid-template-columns:minmax(0,1fr) auto!important}
+.sitem{grid-template-columns:minmax(0,1fr) auto!important}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{min-height:40px}
+.meta{min-width:0}
+</style>
+<style id="watched-green">.btn.done,.showcheck.done{background:#20a464!important;color:#fff!important;border-color:#20a464!important}</style></head><body>
+<header><div class="brand"><span>MARVEL</span> DOOMSDAY WATCH TRACKER</div><div class="count"><div class="k">ROAD TO</div><div class="doom">DOOMSDAY</div><div class="target">December 18, 2026 • Avengers: Doomsday</div><div class="timer" id="timer"><div class="tb"><b id="days">0</b><i>Days</i></div><div class="tb"><b id="hours">0</b><i>Hours</i></div><div class="tb"><b id="mins">0</b><i>Minutes</i></div><div class="tb"><b id="secs">0</b><i>Seconds</i></div></div></div></header>
+<nav><div class="nav"><button class="tab active" data-tab="watch">Watch List</button><button class="tab" data-tab="schedule">Road to Doomsday</button><button class="tab" data-tab="hidden">Hidden</button></div></nav>
+<main><section id="watch"><div class="toolbar"><div class="controls"><input id="search" class="control" placeholder="Search titles or episodes…"><select id="pf" class="control"><option>All</option><option>Watched</option><option>Unwatched</option></select><select id="cf" class="control"><option>All</option><option>MCU</option><option>Disney+</option><option>X-Men</option><option>Fantastic Four</option><option>Multi</option></select><button id="reset" class="btn">Reset</button></div><div class="stats"><div>Watched: <b id="wc">0</b></div><div>Remaining: <b id="rc">0</b></div><div>Progress: <b id="pc">0%</b></div><div class="bar"><i id="pb"></i></div></div></div><div id="list" class="grid"></div></section>
+<section id="schedule" hidden><div id="sched" class="schedule"></div></section><section id="hidden" hidden><div id="hiddenList"></div></section></main>
+<footer>Every supplied title is included in the supplied chronological order. Progress is stored locally in this browser. Episode entries that were not supplied with verified names are explicitly labeled. Made by <a href="https://github.com/Teagannorman08" style="color:#ff6b6f">Teagannorman08</a>.</footer>
+<script>
+const DATA=[{"id": "x1", "title": "Captain America: The First Avenger", "category": "MCU", "type": "Movie", "runtime": 124, "initialWatched": true, "episodes": []}, {"id": "x2", "title": "Marvel Studios: Legends", "category": "Disney+", "type": "Series", "runtime": 45, "initialWatched": false, "episodes": ["Captain America", "Black Widow", "Hawkeye", "Vision and Wanda"]}, {"id": "x3", "title": "Iron Man", "category": "MCU", "type": "Movie", "runtime": 126, "initialWatched": true, "episodes": []}, {"id": "x4", "title": "The Incredible Hulk", "category": "MCU", "type": "Movie", "runtime": 112, "initialWatched": true, "episodes": []}, {"id": "x5", "title": "Iron Man 2", "category": "MCU", "type": "Movie", "runtime": 124, "initialWatched": true, "episodes": []}, {"id": "x6", "title": "Thor", "category": "MCU", "type": "Movie", "runtime": 115, "initialWatched": true, "episodes": []}, {"id": "x7", "title": "Captain America: The Winter Soldier", "category": "MCU", "type": "Movie", "runtime": 136, "initialWatched": true, "episodes": []}, {"id": "x8", "title": "The Avengers", "category": "MCU", "type": "Movie", "runtime": 143, "initialWatched": true, "episodes": []}, {"id": "x9", "title": "Thor: The Dark World", "category": "MCU", "type": "Movie", "runtime": 112, "initialWatched": true, "episodes": []}, {"id": "x10", "title": "Captain America: Civil War", "category": "MCU", "type": "Movie", "runtime": 147, "initialWatched": true, "episodes": []}, {"id": "x11", "title": "Doctor Strange", "category": "MCU", "type": "Movie", "runtime": 115, "initialWatched": true, "episodes": []}, {"id": "x12", "title": "Guardians of the Galaxy", "category": "MCU", "type": "Movie", "runtime": 122, "initialWatched": true, "episodes": []}, {"id": "x13", "title": "Guardians of the Galaxy Vol. 2", "category": "MCU", "type": "Movie", "runtime": 137, "initialWatched": true, "episodes": []}, {"id": "x14", "title": "Spider-Man: Homecoming", "category": "MCU", "type": "Movie", "runtime": 133, "initialWatched": true, "episodes": []}, {"id": "x15", "title": "Thor: Ragnarok", "category": "MCU", "type": "Movie", "runtime": 130, "initialWatched": true, "episodes": []}, {"id": "x16", "title": "Black Panther", "category": "MCU", "type": "Movie", "runtime": 134, "initialWatched": true, "episodes": []}, {"id": "x17", "title": "Avengers: Infinity War", "category": "MCU", "type": "Movie", "runtime": 149, "initialWatched": true, "episodes": []}, {"id": "x18", "title": "Avengers: Endgame", "category": "MCU", "type": "Movie", "runtime": 181, "initialWatched": true, "episodes": []}, {"id": "x19", "title": "Falcon and the Winter Soldier", "category": "Disney+", "type": "Series", "runtime": 50, "initialWatched": false, "episodes": ["New World Order", "The Star-Spangled Man", "Power Broker", "The Whole World Is Watching", "Truth", "One World One People"]}, {"id": "x20", "title": "Avengers: Doomsday", "category": "MCU", "type": "Movie", "runtime": 180, "initialWatched": false, "episodes": []}];
+const KEY="marvel-doomsday-full-v5";
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){S=null}
+if(!S||typeof S!=="object")S={watched:{},episodes:{},hidden:{}};
+S.watched=S.watched&&typeof S.watched==="object"?S.watched:{};
+S.episodes=S.episodes&&typeof S.episodes==="object"?S.episodes:{};
+S.hidden=S.hidden&&typeof S.hidden==="object"?S.hidden:{};
+localStorage.setItem(KEY,JSON.stringify(S));
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S)),fmt=m=>m?`${Math.floor(m/60)}h ${m%60?m%60+"m":""}`:"Runtime TBD";
+const hasE=x=>x.episodes.length>0,done=x=>hasE(x)?x.episodes.every((e,i)=>S.episodes[x.id+"-"+i]):!!S.watched[x.id],active=()=>DATA.filter(x=>!S.hidden[x.id]);
+function stats(){
+let total=0,watched=0;
+active().forEach(x=>{if(hasE(x)){total+=x.episodes.length;watched+=x.episodes.filter((e,i)=>S.episodes[x.id+"-"+i]).length}else{total++;if(S.watched[x.id])watched++}});
+let p=total?Math.round(watched/total*100):0;wc.textContent=watched;rc.textContent=total-watched;pc.textContent=p+"%";pb.style.width=p+"%";
+}
+function render(){let q=search.value.toLowerCase(),p=pf.value,c=cf.value;list.innerHTML="";active().forEach(x=>{let d=done(x);if((p==="Watched"&&!d)||(p==="Unwatched"&&d)||(c!=="All"&&x.category!==c)||(q&&!x.title.toLowerCase().includes(q)&&!x.episodes.some(e=>e.toLowerCase().includes(q))))return;
+let card=document.createElement("article");card.className="card";let ep=hasE(x)?`<div class="episodes"><div class="season"><h4>Episodes</h4>${x.episodes.map((e,i)=>`<label class="ep"><input type="checkbox" data-i="${i}" ${S.episodes[x.id+"-"+i]?"checked":""}> ${e}</label>`).join("")}</div></div>`:"";
+card.innerHTML=`<div class="meta"><div class="title">${x.title}</div><div class="sub">${x.category} • ${x.type} • ${fmt(x.runtime)}</div><div class="desc">Chronological watch-list entry. Verified ${x.initialWatched?"and pre-watched":"unknown"}.</div></div><div class="actions">${hasE(x)?`<button class="btn expand">▼ Episodes</button>`:"<button class="btn check">☐ Mark</button>"}<button class="btn showcheck ${d?"done":""}>${d?"✓ Done":"○ Done"}</button><button class="btn hide">◉ Hide</button></div>${ep}`;
+card.querySelector(".hide").onclick=()=>{S.hidden[x.id]=1;save();render()};if(hasE(x)){
+card.querySelector(".expand").onclick=()=>card.classList.toggle("open");
+const showcheck=card.querySelector(".showcheck");
+if(showcheck)showcheck.onclick=()=>{
+const allDone=done(x);
+x.episodes.forEach((e,i)=>S.episodes[x.id+"-"+i]=!allDone);
+save();render();renderSchedule();
+};card.querySelectorAll("[data-i]").forEach(b=>b.onchange=()=>{S.episodes[x.id+"-"+b.dataset.i]=b.checked;save();stats();renderSchedule()})}else card.querySelector(".check").onclick=()=>{S.watched[x.id]=!S.watched[x.id];save();stats();renderSchedule()};list.appendChild(card)});stats()}
+function renderHidden(){hiddenList.innerHTML="";let h=DATA.filter(x=>S.hidden[x.id]);if(!h.length){hiddenList.innerHTML='<div class="empty">No hidden titles.</div>';return}h.forEach(x=>{let d=document.createElement("div");d.style.padding="12px";d.innerHTML=`<div class="title">${x.title}</div><button class="btn" onclick="S.hidden[${x.id}]=0;save();renderHidden();render()">Unhide</button>`;hiddenList.appendChild(d)})}
+function renderSchedule(){
+sched.innerHTML="";
+const units=[];
+active().forEach(x=>{
+ if(x.title==="Avengers: Doomsday")return;
+ if(hasE(x))x.episodes.forEach((e,i)=>{
+   if(!S.episodes[x.id+"-"+i])units.push({
+     title:x.title,ep:"Episode "+(i+1)+" — "+e,mins:x.runtime?Math.max(1,Math.round(x.runtime/x.episodes.length)):45,
+     id:x.id,episode:i
+   });
+ });
+ else if(!S.watched[x.id])units.push({title:x.title,ep:"",mins:x.runtime||60,id:x.id,episode:null});
+});
+const start=new Date();start.setHours(12,0,0,0);
+const finale=new Date(2026,11,18,12);
+const days=Math.max(0,Math.floor((finale-start)/86400000));
+const buckets=Array.from({length:days},()=>[]);
+let cursor=0,remaining=units.reduce((n,u)=>n+u.mins,0);
+for(let d=0;d<days&&cursor<units.length;d++){
+ const daysLeft=days-d,target=Math.ceil(remaining/daysLeft);let total=0;
+ while(cursor<units.length){
+  const u=units[cursor],itemsLeft=units.length-cursor;
+  if(buckets[d].length&&total+u.mins>target&&itemsLeft>daysLeft-1)break;
+  buckets[d].push(u);total+=u.mins;remaining-=u.mins;cursor++;
+  if(total>=target)break;
+ }
+}
+while(cursor<units.length&&days)buckets[days-1].push(units[cursor++]);
+buckets.forEach((items,i)=>{if(!items.length)return;let d=new Date(start);d.setDate(d.getDate()+i),day=document.createElement("div");day.className="day";let total=items.reduce((n,u)=>n+u.mins,0);day.innerHTML=`<div class="daydate">${d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</div><div style="color:#aaa;font-size:11px;margin-bottom:8px">${total} min</div>`;
+items.forEach(u=>{let q=document.createElement("div");q.className="sitem";
+q.innerHTML='<div><b>'+u.title+'</b>'+(u.ep?'<div class="sub">'+u.ep+'</div>':'')+'<div class="runtime">'+fmt(u.mins)+'</div></div><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="schedule-check" '+(!u.episode===null&&S.watched[u.id]||u.episode!==null&&S.episodes[u.id+"-"+u.episode]?"checked":"")+' style="cursor:pointer"> Done</label>';
+const box=q.querySelector(".schedule-check");
+box.onchange=()=>{
+  if(u.episode===null) S.watched[u.id]=box.checked;
+  else S.episodes[u.id+"-"+u.episode]=box.checked;
+  save(); render(); renderSchedule();
+};
+day.appendChild(q)});sched.appendChild(day)});
+let f=document.createElement("div");f.className="day";f.innerHTML='<div class="daydate">Friday, December 18, 2026 • FINAL DATE</div><div class="sitem"><div><b>Avengers: Doomsday</b><div class="sub">Premiere • 180 min</div></div><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="schedule-check" '+(S.watched["x20"]?"checked":"")+' style="cursor:pointer"> Done</label></div>';
+f.querySelector(".schedule-check").onchange=()=>{S.watched["x20"]=f.querySelector(".schedule-check").checked;save();render();renderSchedule()};sched.appendChild(f);
+}
+function tick(){let t=new Date("2026-12-18T00:00:00-07:00"),d=Math.max(0,t-new Date());if(!d){timer.innerHTML='<div style="grid-column:1/-1;font-size:28px;font-weight:1000">DOOMSDAY IS HERE</div>';return}d=Math.floor(d/1e3);let s=d%60,m=Math.floor(d/60)%60,h=Math.floor(d/3600)%24,day=Math.floor(d/86400);days.textContent=day;hours.textContent=h;mins.textContent=m;secs.textContent=s}
+setInterval(tick,1e3);tick();
+render();renderHidden();renderSchedule();
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");watch.hidden=b.dataset.tab!=="watch";schedule.hidden=b.dataset.tab!=="schedule";hidden.hidden=b.dataset.tab!=="hidden"});
+search.oninput=render;pf.onchange=render;cf.onchange=render;reset.onclick=()=>{if(confirm("Reset all progress and hidden titles on this browser?")){localStorage.removeItem(KEY);location.reload()}};tick();
+</script></body></html>
