@@ -27,16 +27,19 @@ main{max-width:1400px;margin:0 auto;padding:24px}
 .progress-bar{width:100%;height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:8px}
 .progress-bar-fill{height:100%;background:var(--red);transition:width .3s}
 .grid{display:grid;gap:12px;margin-top:20px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;cursor:pointer;transition:all .2s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;display:grid;grid-template-columns:1fr auto}
 .card:hover{border-color:var(--red);background:#161616}
+.card.hidden-card{display:none}
 .card-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
 .card-title{font-size:15px;font-weight:800;color:var(--text)}
 .card-meta{font-size:12px;color:var(--muted);margin-top:6px}
-.card-actions{display:flex;gap:8px;margin-top:12px}
+.card-content{grid-column:1}
+.card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;grid-column:1/-1}
 .btn{padding:8px 14px;background:var(--line);border:1px solid var(--line);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;white-space:nowrap}
 .btn:hover{background:#222}
 .btn.expand{padding:8px 10px}
 .btn.done{background:var(--green);border-color:var(--green);color:#000}
+.btn.done:hover{background:#1a8c3a}
 .episodes{display:grid;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:none}
 .card.open .episodes{display:grid}
 .ep-item{display:flex;gap:8px;align-items:center;font-size:13px}
@@ -55,7 +58,7 @@ main{max-width:1400px;margin:0 auto;padding:24px}
 footer{text-align:center;padding:24px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);margin-top:40px}
 section{display:none}
 section.active{display:block}
-@media(max-width:768px){.toolbar{grid-template-columns:1fr}.timer-box .value{font-size:20px}.card-actions{flex-wrap:wrap}}
+@media(max-width:768px){.toolbar{grid-template-columns:1fr}.timer-box .value{font-size:20px}.card{grid-template-columns:1fr}.card-actions{flex-wrap:wrap}}
 </style></head><body>
 <header>
 <div class="brand"><span>MARVEL</span> DOOMSDAY TRACKER</div>
@@ -264,22 +267,42 @@ function render(){
     let card=document.createElement("div");
     card.className="card";
     let ep=hasE(x)?`<div class="episodes">${x.episodes.map((e,i)=>`<div class="ep-item"><input type="checkbox" id="ep${x.id}-${i}" data-i="${i}" ${S.episodes[x.id+"-"+i]?"checked":""} /><label for="ep${x.id}-${i}">${i+1}. ${e}</label></div>`).join("")}</div>`:""
-    card.innerHTML=`<div class="card-header"><div><div class="card-title">${x.title}</div><div class="card-meta">${x.category} • ${x.type} • ${fmt(x.runtime)}</div></div></div>${ep}<div class="card-actions">${hasE(x)?`<button class="btn expand">Episodes</button>`:""}${hasE(x)?`<button class="btn ${done(x)?"done":""}" onclick="toggleAllEpisodes(this,'${x.id}')">Mark All</button>`:`<button class="btn ${S.watched[x.id]?"done":""}" onclick="toggleMovie(this,'${x.id}')">Watched</button>`}<button class="btn" onclick="hideTitle('${x.id}')">Hide</button></div>`;
+    card.innerHTML=`<div class="card-content"><div class="card-header"><div><div class="card-title">${x.title}</div><div class="card-meta">${x.category} • ${x.type} • ${fmt(x.runtime)}</div></div></div>${ep}</div><div class="card-actions">${hasE(x)?`<button class="btn expand">Episodes</button>`:""}${hasE(x)?`<button class="btn ${done(x)?"done":""}" onclick="toggleAllEpisodes(this,'${x.id}')">Mark All</button>`:`<button class="btn ${S.watched[x.id]?"done":""}" onclick="toggleMovie(this,'${x.id}')">Watched</button>`}<button class="btn" onclick="hideTitle('${x.id}')">Hide</button></div>`;
     card.querySelector(".expand")?.addEventListener("click",()=>card.classList.toggle("open"));
     if(hasE(x)){card.querySelectorAll("[data-i]").forEach(b=>{b.onchange=()=>{S.episodes[x.id+"-"+b.dataset.i]=b.checked;save();stats();}})}
     list.appendChild(card);
   });
   stats();
 }
-function toggleMovie(btn,id){S.watched[id]=!S.watched[id];save();render();}
-function toggleAllEpisodes(btn,id){let x=DATA.find(d=>d.id===id);let allDone=x.episodes.every((e,i)=>S.episodes[x.id+"-"+i]);x.episodes.forEach((e,i)=>S.episodes[x.id+"-"+i]=!allDone);save();render();}
-function hideTitle(id){S.hidden[id]=1;save();render();renderHidden();}
+function toggleMovie(btn,id){
+  S.watched[id]=!S.watched[id];
+  save();
+  render();
+}
+function toggleAllEpisodes(btn,id){
+  let x=DATA.find(d=>d.id===id);
+  let allDone=x.episodes.every((e,i)=>S.episodes[x.id+"-"+i]);
+  x.episodes.forEach((e,i)=>S.episodes[x.id+"-"+i]=!allDone);
+  save();
+  render();
+}
+function hideTitle(id){
+  S.hidden[id]=1;
+  save();
+  render();
+  renderHidden();
+}
 function renderHidden(){
   let h=DATA.filter(x=>S.hidden[x.id]);
   let list=document.getElementById("hiddenList");
   list.innerHTML=h.map(x=>`<div class="hidden-item"><span>${x.title}</span><button class="btn" onclick="unhideTitle('${x.id}')">Unhide</button></div>`).join("");
 }
-function unhideTitle(id){S.hidden[id]=0;save();render();renderHidden();}
+function unhideTitle(id){
+  S.hidden[id]=0;
+  save();
+  render();
+  renderHidden();
+}
 function tick(){
   let t=new Date("2026-12-18T00:00:00-07:00");
   let d=Math.max(0,t-new Date());
@@ -290,11 +313,13 @@ function tick(){
   let html=d?`<div class="timer-box"><div class="value">${days}</div><div class="label">Days</div></div><div class="timer-box"><div class="value">${hours}</div><div class="label">Hours</div></div><div class="timer-box"><div class="value">${minutes}</div><div class="label">Minutes</div></div><div class="timer-box"><div class="value">${seconds}</div><div class="label">Seconds</div></div>`:'<div style="grid-column:1/-1;text-align:center;font-size:24px;font-weight:900;color:var(--red)">DOOMSDAY IS HERE</div>';
   document.getElementById("timer").innerHTML=html;
 }
-setInterval(tick,1000);tick();
+setInterval(tick,1000);
+tick();
 document.querySelectorAll(".tab").forEach(b=>{b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll("section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active");}});
 document.getElementById("search").oninput=render;
 document.getElementById("pf").onchange=render;
 document.getElementById("cf").onchange=render;
-render();renderHidden();
+render();
+renderHidden();
 </script>
 </body></html>
