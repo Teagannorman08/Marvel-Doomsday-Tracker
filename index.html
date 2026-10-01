@@ -266,10 +266,11 @@ function render(){
     if((p==="Watched"&&!d)||(p==="Unwatched"&&d)||(c!=="All"&&x.category!==c)||(q&&!x.title.toLowerCase().includes(q)&&!x.episodes.some(e=>e.toLowerCase().includes(q))))return;
     let card=document.createElement("div");
     card.className="card";
-    let ep=hasE(x)?`<div class="episodes">${x.episodes.map((e,i)=>`<div class="ep-item"><input type="checkbox" id="ep${x.id}-${i}" data-i="${i}" ${S.episodes[x.id+"-"+i]?"checked":""} /><label fo[...]
-    card.innerHTML=`<div class="card-content"><div class="card-header"><div><div class="card-title">${x.title}</div><div class="card-meta">${x.category} • ${x.type} • ${fmt(x.runtime)}</div><[...]
+    let ep=hasE(x)?`<div class="episodes">${x.episodes.map((e,i)=>`<div class="ep-item"><input type="checkbox" id="ep${x.id}-${i}" data-i="${i}" ${S.episodes[x.id+"-"+i]?"checked":""} /><label for="ep${x.id}-${i}">${e}</label></div>`).join("")}</div>`:"";
+    let seriesButtons=hasE(x)?`<button class="btn ${d?"done":""}" onclick="toggleAllEpisodes(this,'${x.id}')">${d?"Watched":"Watch"}</button><button class="btn expand">Episodes</button>`:`<button class="btn ${d?"done":""}" onclick="toggleMovie(this,'${x.id}')">${d?"Watched":"Watch"}</button>`;
+    card.innerHTML=`<div class="card-content"><div class="card-header"><div><div class="card-title">${x.title}</div><div class="card-meta">${x.category} • ${x.type} • ${fmt(x.runtime)}</div></div><button class="btn" style="opacity:0.5;cursor:default">Hide</button></div><div class="card-actions">${seriesButtons}<button class="btn" onclick="hideTitle('${x.id}')">Hide</button></div>${ep}</div>`;
     card.querySelector(".expand")?.addEventListener("click",()=>card.classList.toggle("open"));
-    if(hasE(x)){card.querySelectorAll("[data-i]").forEach(b=>{b.onchange=()=>{S.episodes[x.id+"-"+b.dataset.i]=b.checked;save();stats();}})}
+    if(hasE(x)){card.querySelectorAll("[data-i]").forEach(b=>{b.onchange=()=>{S.episodes[x.id+"-"+b.dataset.i]=b.checked;save();stats();render();}})}
     list.appendChild(card);
   });
   stats();
@@ -330,12 +331,12 @@ function tick(){
   let hours=Math.floor(d%86400000/3600000);
   let minutes=Math.floor(d%3600000/60000);
   let seconds=Math.floor(d%60000/1000);
-  let html=d?`<div class="timer-box"><div class="value">${days}</div><div class="label">Days</div></div><div class="timer-box"><div class="value">${hours}</div><div class="label">Hours</div></div><div[...]
+  let html=d?`<div class="timer-box"><div class="value">${days}</div><div class="label">Days</div></div><div class="timer-box"><div class="value">${hours}</div><div class="label">Hours</div></div><div class="timer-box"><div class="value">${minutes}</div><div class="label">Minutes</div></div><div class="timer-box"><div class="value">${seconds}</div><div class="label">Seconds</div></div>`:"<p style='text-align:center;color:var(--red)'>DOOMSDAY HAS ARRIVED</p>";
   document.getElementById("timer").innerHTML=html;
 }
 setInterval(tick,1000);
 tick();
-document.querySelectorAll(".tab").forEach(b=>{b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll("section").forEach(x=>x.classList[...]
+document.querySelectorAll(".tab").forEach(b=>{b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll("section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")}});
 document.getElementById("search").oninput=render;
 document.getElementById("pf").onchange=render;
 document.getElementById("cf").onchange=render;
